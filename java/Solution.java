@@ -29,8 +29,7 @@ public class Solution {
 
         List<Proposal> proposals = proposalService.getValidProposals();
 
-        String s = joinValidProposalsIds(proposals);
-        return s;
+        return joinValidProposalsIds(proposals);
     }
 
     private static String joinValidProposalsIds(List<Proposal> proposals) {

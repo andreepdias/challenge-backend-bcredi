@@ -25,8 +25,8 @@ public class ProposalValidation {
     }
 
     public Boolean isValid(Proposal proposal){
-        for (ValidationProposalRule validation : validations) {
-            if(!validation.isValid(proposal)){
+        for (ValidationProposalRule validationRule : validations) {
+            if(!validationRule.isValid(proposal)){
                 return false;
             }
         }
