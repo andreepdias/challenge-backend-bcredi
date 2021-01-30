@@ -34,7 +34,9 @@ Também está disponível no meu dockerhub: andreepdias/challenge-backend-bcredi
 
 `docker pull andreepdias/challenge-backend-bcredi`
 
-`docker run andreepdias/challenge-backend-bcredi`
+`docker run -v $PWD/test/:/test/ andreepdias/challenge-backend-bcredi`
+
+**Obs.:** Os arquivos de entrada e saída (utilizados na comparação dos testes) não estão no container. Portanto, um volume é criado na pasta onde o comando é executado ('$PWD' no Linux). Ou seja, é necessário ter a pasta de /test/ deste repositório no GitHub dentro do diretório que o *docker run* é executado.
 
 Arquivo de saída:
 
