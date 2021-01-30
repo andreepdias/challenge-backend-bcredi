@@ -18,13 +18,13 @@ No desafio existem 8 regras de validação para uma proposta ser válida, e 2 re
 
 A solução proposta consiste em um gerenciador de eventos (EventManager) e um serviço para gerenciar as propostas (ProposalService).
 
-O EventManager é composto por dois métodos públicos: um para adicionar (add) um evento na sua coleção de eventos a partir de um vetor de strings construído a partir de uma linha do arquivo de entrada, que representa um evento; outro para processar todos os eventos. A implementação da coleção de eventos são dois mapas ordenados (LinkedHashMap) abstraídos pela class EventMap, para garantir a consistência entre ambos mapas. A escolha de dois mapas foi para atender duas as duas restrições de adição de eventos e garantir um processamento otimizado (rápido, já que o número de eventos pode vir a ser volumoso). 
+O EventManager é composto por dois métodos públicos: um para adicionar (add) um evento na sua coleção de eventos a partir de um vetor de strings construído a partir de uma linha do arquivo de entrada, que representa um evento; outro para processar todos os eventos (processAll). A implementação da coleção de eventos são dois mapas ordenados (LinkedHashMap) abstraídos pela class EventMap, para garantir a consistência entre ambos mapas. A escolha de dois mapas foi para atender duas as duas restrições de adição de eventos e garantir um processamento otimizado (rápido).
 
-Cada evento das coleções do EventMap é representando por uma classe abstrata Event que tem um método abstrato *process* para processar o evento, que é invocado pela classe de serviço.
+Cada evento das coleções do EventMap é representando por uma classe abstrata Event que tem um método abstrato *process* para processar o evento.
 
-Como os dados não são persistidos, e por simplicidade, não foi criado um módulo de repositórios, portanto na classe de serviços está presente coleção de propostas (Proposal) e ela é responsável por manipular tal coleção: adicionando, atualizando, removendo e validando. Essa classe é invocada por cada evento e também possui um método público para retornar a lista de propostas válidas. 
+Como os dados não são persistidos, e por simplicidade, não foi criado um módulo de repositórios, portanto na classe de serviços está presente coleção de propostas (Proposal) e ela é responsável por manipular tal coleção: adicionando, atualizando, removendo e validando. Essa classe é invocada por cada evento e também possui um método público para retornar a lista de propostas válidas (getValidProposals).
 
-Para a validação existe uma classe no pacote de serviço (ProposalValidation) que guarda uma coleção de regras de validações, e um método para aplicar todas as validações em uma Proposta. Uma regra de validação implementa a classe ValidationRule que possui apenas um método de validação: *isValid* .
+Para a validação existe uma classe no pacote de serviço (ProposalValidation) que guarda uma coleção de regras de validações, e um método para aplicar todas as validações em uma proposta. Uma regra de validação implementa a classe ValidationRule que possui apenas um método de validação: *isValid* .
 
 A solução pode ser executada pelo jar solution.jar:
 
