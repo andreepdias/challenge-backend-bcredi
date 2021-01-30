@@ -1,3 +1,7 @@
+import domain.Proposal;
+import event.EventManager;
+import service.proposal.ProposalService;
+
 import java.util.*;
 
 public class Solution {
@@ -12,7 +16,28 @@ public class Solution {
   //
   // Complete a função para retornar uma String com os IDs das propostas válidas no seguinte formato (separado por vírgula):
   // "52f0b3f2-f838-4ce2-96ee-9876dd2c0cf6,51a41350-d105-4423-a9cf-5a24ac46ae84,50cedd7f-44fd-4651-a4ec-f55c742e3477"
-  public static String processMessages(List<String> messages) {
-    return "";
-  }
+    public static String processMessages(List<String> messages) {
+
+        final ProposalService proposalService = new ProposalService();
+        EventManager eventManager = new EventManager(proposalService);
+
+        for (String message : messages) {
+            String[] rawEvent = message.trim().split(",");
+            eventManager.add(rawEvent);
+        }
+        eventManager.processAll();
+
+        List<Proposal> proposals = proposalService.getValidProposals();
+
+        String s = joinValidProposalsIds(proposals);
+        return s;
+    }
+
+    private static String joinValidProposalsIds(List<Proposal> proposals) {
+        StringJoiner sj = new StringJoiner(",");
+        for (Proposal proposal : proposals) {
+            sj.add(proposal.getId());
+        }
+        return sj.toString();
+    }
 }
