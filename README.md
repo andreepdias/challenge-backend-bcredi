@@ -1,122 +1,58 @@
-<img src="https://s3.amazonaws.com/gupy5/production/companies/442/career/448/images/logo.png" align="right" height="150"/>
+# Challenge Backend BCredi
 
-# Teste de Back-end Bcredi
+Desafio de um processo seletivo de 2019 da BCredi, realizado para praticar Java.
 
-Na Bcredi utilizamos sistemas de mensageria para integrar nossos microsserviços. Nesse desafio, você vai resolver um problema real com a linguagem que você escolher. 
+Repositório do desafio: https://github.com/bcredi/teste-backends
 
-Você receberá uma lista de eventos com dados de propostas de empréstimo, garantias de imóvel e proponentes. Com base em regras de validação, você precisar retornar quais propostas são válidas após processar todos os eventos.
+Desafio encontrado em: https://github.com/CollabCodeTech/backend-challenges
 
-Uma proposta é o modelo que contém as informações de um empréstimo. Cada proposta deve conter múltiplos imóveis de garantia. A proposta também deve conter múltiplos proponentes, que são as pessoas envolvidas no contrato de empréstimo.
+### Resumo
 
-Para começar o desafio:
+Neste desafio o objetivo era manipular um conjunto de eventos (escritos em arquivos de texto) que representavam ações de um sistema de propostas de empréstimos. As propostas válidas gerados por eventos válidos deveriam ser retornadas.
 
-1. Faça um fork deste repositório
-2. Clone este projeto
-3. Escolha sua linguagem de preferência e edite o arquivo respectivo. Por exemplo, se você quer resolver em Ruby, o arquivo é `./ruby/solution.rb`; e se for Java `./java/solution.java`
-4. Para testar sua solução, utilize os inputs e outputs definidos em `./test/input/*.txt` e `./test/output/*.txt`
+Uma proposta de empréstimo é composta valor, parcelas, proponentes (entidades envolvidas) e garantias.
 
-⚠️ Lembre-se de manter seu código limpo (temos um exemplar do Clean Code no escritório), seguindo as convenções da comunidade da linguagem de você escolher e, é claro, de escrever testes.
+No desafio existem 8 regras de validação para uma proposta ser válida, e 2 regras para um evento ser válido, que podem ser encontradas no repositório original.
 
-## Regras
+### Solução
 
-*   O valor do empréstimo deve estar entre R$ 30.000,00 e R$ 3.000.000,00
-*   O empréstimo deve ser pago em no mínimo 2 anos e no máximo 15 anos
-*   Deve haver no mínimo 2 proponentes por proposta
-*   Deve haver exatamente 1 proponente principal por proposta
-*   Todos os proponentes devem ser maiores de 18 anos
-*   Dever haver no mínimo 1 garantia de imóvel por proposta
-*   A soma do valor das garantias deve ser maior ou igual ao dobro do valor do empréstimo
-*   As garantias de imóvel dos estados PR, SC e RS não são aceitas
-*   A renda do proponente principal deve ser pelo menos:
-    *   4 vezes o valor da parcela do empréstimo, se a idade dele for entre 18 e 24 anos
-    *   3 vezes o valor da parcela do empréstimo, se a idade dele for entre 24 e 50 anos
-    *   2 vezes o valor da parcela do empréstimo, se a idade dele for acima de 50 anos
-*   Em caso de eventos repetidos, considere o primeiro evento
-    *   Por exemplo, ao receber o evento ID 1 e novamente o mesmo evento, descarte o segundo evento
-*   Em caso de eventos atrasados, considere sempre o evento mais novo
-    *   Por exemplo, ao receber dois eventos de atualização com IDs diferentes, porém o último evento tem um timestamp mais antigo do que o primeiro, descarte o evento mais antigo
+A solução proposta consiste em um gerenciador de eventos (EventManager) e um serviço para gerenciar as propostas (ProposalService).
 
-## Formato de input
+O EventManager é composto por dois métodos públicos: um para adicionar (add) um evento na sua coleção de eventos a partir de um vetor de strings construído a partir de uma linha do arquivo de entrada, que representa um evento; outro para processar todos os eventos (processAll). A implementação da coleção de eventos são dois mapas ordenados (LinkedHashMap) abstraídos pela class EventMap, para garantir a consistência entre ambos mapas. A escolha de dois mapas foi para atender duas as duas restrições de adição de eventos e garantir um processamento otimizado (rápido).
 
-A primeira linha contém o número de eventos a serem processados. Da segunda em diante, os dados do evento separados por vírgula.
+Cada evento das coleções do EventMap é representando por uma classe abstrata Event que tem um método abstrato *process* para processar o evento.
 
-Cada evento tem seu formato. Veja abaixo:
+Como os dados não são persistidos, e por simplicidade, não foi criado um módulo de repositórios, portanto na classe de serviços está presente coleção de propostas (Proposal) e ela é responsável por manipular tal coleção: adicionando, atualizando, removendo e validando. Essa classe é invocada por cada evento e também possui um método público para retornar a lista de propostas válidas (getValidProposals).
 
-* **proposal.created**: enviado quando uma proposta é criada
-`event_id,event_schema,event_action,event_timestamp,proposal_id,proposal_loan_value,proposal_number_of_monthly_installments`
+Para a validação existe uma classe no pacote de serviço (ProposalValidation) que guarda uma coleção de regras de validações, e um método para aplicar todas as validações em uma proposta. Uma regra de validação implementa a classe ValidationRule que possui apenas um método de validação: *isValid* .
 
-* **proposal.updated**: enviado quando uma proposta é atualizada
-`event_id,event_schema,event_action,event_timestamp,proposal_id,proposal_loan_value,proposal_number_of_monthly_installments`
+A solução pode ser executada pelo jar solution.jar:
 
-* **proposal.deleted**: enviado quando uma proposta é excluída
-`event_id,event_schema,event_action,event_timestamp,proposal_id`
+`java -jar solution.jar`
 
-* **warranty.added**: enviado quando um imóvel de garantia é adicionado à uma proposta
-`event_id,event_schema,event_action,event_timestamp,proposal_id,warranty_id,warranty_value,warranty_province`
+Também está disponível no meu dockerhub: andreepdias/challenge-backend-bcredi
 
-* **warranty.updated**: enviado quando um imóvel de garantia é atualizado
-`event_id,event_schema,event_action,event_timestamp,proposal_id,warranty_id,warranty_value,warranty_province`
+`docker pull andreepdias/challenge-backend-bcredi`
 
-* **warranty.removed**: enviado quando um imóvel de garantia é removido de uma proposta
-`event_id,event_schema,event_action,event_timestamp,proposal_id,warranty_id`
+`docker run -v $PWD/test/:/test/ andreepdias/challenge-backend-bcredi`
 
-* **proponent.added**: enviado quando um proponente é adicionado à uma proposta
-`event_id,event_schema,event_action,event_timestamp,proposal_id,proponent_id,proponent_name,proponent_age,proponent_monthly_income,proponent_is_main`
+**Obs.:** Os arquivos de entrada e saída (utilizados na comparação dos testes) não estão no container. Portanto, um volume é criado na pasta onde o comando é executado ('$PWD' no Linux). Ou seja, é necessário ter a pasta de /test/ deste repositório no GitHub dentro do diretório que o *docker run* é executado.
 
-* **proponent.updated**: enviado quando um proponente é atualizado
-`event_id,event_schema,event_action,event_timestamp,proposal_id,proponent_id,proponent_name,proponent_age,proponent_monthly_income,proponent_is_main`
-
-* **proponent.removed**: enviado quando um proponente é removido de uma proposta
-` event_id,event_schema,event_action,event_timestamp,proposal_id,proponent_id`
-
-## Casos de exemplo
-
-### Exemplo 1
-
-Input do exemplo
+Arquivo de saída:
 
 ```
-10
-c2d06c4f-e1dc-4b2a-af61-ba15bc6d8610,proposal,created,2019-11-11T13:26:04Z,bd6abe95-7c44-41a4-92d0-edf4978c9f4e,684397.0,72
-27179730-5a3a-464d-8f1e-a742d00b3dd3,warranty,added,2019-11-11T13:26:04Z,bd6abe95-7c44-41a4-92d0-edf4978c9f4e,6b5fc3f9-bb6b-4145-9891-c7e71aa87ca2,1967835.53,ES
-716de46f-9cc0-40be-b665-b0d47841db4c,warranty,added,2019-11-11T13:26:04Z,bd6abe95-7c44-41a4-92d0-edf4978c9f4e,1750dfe8-fac7-4913-b946-ab538dce0977,1608429.56,GO
-05588a09-3268-464f-8bc8-03974303332a,proponent,added,2019-11-11T13:26:04Z,bd6abe95-7c44-41a4-92d0-edf4978c9f4e,5f9b96d2-b8db-48a8-a28b-f7ac9b3c8108,Kip Beer,50,73300.95,true
-0fe9465f-af17-452c-9abe-fa64d475d8ad,proponent,added,2019-11-11T13:26:04Z,bd6abe95-7c44-41a4-92d0-edf4978c9f4e,fc1a95db-5468-4a37-9a49-9b15b9e250e6,Dong McDermott,50,67287.16,false
-814695b6-f44e-491b-9921-af806f5bb25c,proposal,created,2019-11-11T13:27:22Z,af6e600b-2622-40d1-89ad-d3e5b6cc2fdf,2908382.0,108
-cc08d0d2-e519-495f-b7d6-db6391c21958,warranty,added,2019-11-11T13:27:22Z,af6e600b-2622-40d1-89ad-d3e5b6cc2fdf,37113e50-26ae-48d2-aaf4-4cda8fa76c79,6040545.22,BA
-f72d0829-beac-45bb-b235-7fa16b117c43,warranty,added,2019-11-11T13:27:22Z,af6e600b-2622-40d1-89ad-d3e5b6cc2fdf,8ade6e09-cb60-4a97-abbb-b73bf4bd8f76,6688872.79,DF
-5d9e1ec6-9304-40a1-947f-ab5ea993d100,proponent,added,2019-11-11T13:27:22Z,af6e600b-2622-40d1-89ad-d3e5b6cc2fdf,2213ea91-4a3c-46a3-b3a7-ff55c2888561,Kathline Ferry,50,168896.38,true
-23060b08-32bf-4e53-9866-69f6bcc7fdbd,proponent,added,2019-11-11T13:27:22Z,af6e600b-2622-40d1-89ad-d3e5b6cc2fdf,7526214a-cd5b-4e49-a723-e031bc82dcef,Merle Leuschke,50,143081.9,false
+Starting tests...
+Test 1/13 - Passed
+Test 2/13 - Passed
+Test 3/13 - Passed
+Test 4/13 - Passed
+Test 5/13 - Passed
+Test 6/13 - Passed
+Test 7/13 - Passed
+Test 8/13 - Passed
+Test 9/13 - Passed
+Test 10/13 - Passed
+Test 11/13 - Passed
+Test 12/13 - Passed
+Test 13/13 - Passed
 ```
-
-Output do exemplo
-
-```
-bd6abe95-7c44-41a4-92d0-edf4978c9f4e,af6e600b-2622-40d1-89ad-d3e5b6cc2fdf
-```
-
-Explicação: como os dados das duas propostas eram válidos, o output contém as duas propostas.
-
-### Exemplo 2
-
-Input do exemplo:
-
-```
-8
-c2d06c4f-e1dc-4b2a-af61-ba15bc6d8610,proposal,created,2019-11-11T13:26:04Z,bd6abe95-7c44-41a4-92d0-edf4978c9f4e,684397.0,72
-27179730-5a3a-464d-8f1e-a742d00b3dd3,warranty,added,2019-11-11T13:26:04Z,bd6abe95-7c44-41a4-92d0-edf4978c9f4e,6b5fc3f9-bb6b-4145-9891-c7e71aa87ca2,1967835.53,ES
-716de46f-9cc0-40be-b665-b0d47841db4c,warranty,added,2019-11-11T13:26:04Z,bd6abe95-7c44-41a4-92d0-edf4978c9f4e,1750dfe8-fac7-4913-b946-ab538dce0977,1608429.56,GO
-814695b6-f44e-491b-9921-af806f5bb25c,proposal,created,2019-11-11T13:27:22Z,af6e600b-2622-40d1-89ad-d3e5b6cc2fdf,2908382.0,108
-cc08d0d2-e519-495f-b7d6-db6391c21958,warranty,added,2019-11-11T13:27:22Z,af6e600b-2622-40d1-89ad-d3e5b6cc2fdf,37113e50-26ae-48d2-aaf4-4cda8fa76c79,6040545.22,BA
-f72d0829-beac-45bb-b235-7fa16b117c43,warranty,added,2019-11-11T13:27:22Z,af6e600b-2622-40d1-89ad-d3e5b6cc2fdf,8ade6e09-cb60-4a97-abbb-b73bf4bd8f76,6688872.79,DF
-5d9e1ec6-9304-40a1-947f-ab5ea993d100,proponent,added,2019-11-11T13:27:22Z,af6e600b-2622-40d1-89ad-d3e5b6cc2fdf,2213ea91-4a3c-46a3-b3a7-ff55c2888561,Kathline Ferry,50,168896.38,true
-23060b08-32bf-4e53-9866-69f6bcc7fdbd,proponent,added,2019-11-11T13:27:22Z,af6e600b-2622-40d1-89ad-d3e5b6cc2fdf,7526214a-cd5b-4e49-a723-e031bc82dcef,Merle Leuschke,50,143081.9,false
-```
-
-Output do exemplo:
-
-```
-af6e600b-2622-40d1-89ad-d3e5b6cc2fdf
-```
-
-Explicação: uma das propostas dos eventos não tinha nenhum proponente, por isso somente uma das propostas estavam válidas.
